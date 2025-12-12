@@ -379,10 +379,17 @@ func (r *ServiceResource) Create(ctx context.Context, req resource.CreateRequest
 			return
 		}
 
+		_, environment, err := defaultEnvironmentForProject(ctx, *r.client, data.ProjectId.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get default environment, got error: %s", err))
+			return
+		}
+
 		volumeResponse, err := createVolume(ctx, *r.client, VolumeCreateInput{
-			MountPath: volumeData.MountPath.ValueString(),
-			ProjectId: data.ProjectId.ValueString(),
-			ServiceId: data.Id.ValueStringPointer(),
+			MountPath:     volumeData.MountPath.ValueString(),
+			ProjectId:     data.ProjectId.ValueString(),
+			ServiceId:     data.Id.ValueStringPointer(),
+			EnvironmentId: &environment.Id,
 		})
 
 		if err != nil {
@@ -550,10 +557,17 @@ func (r *ServiceResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
+		_, environment, err := defaultEnvironmentForProject(ctx, *r.client, data.ProjectId.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to get default environment, got error: %s", err))
+			return
+		}
+
 		volumeResponse, err := createVolume(ctx, *r.client, VolumeCreateInput{
-			MountPath: volumeData.MountPath.ValueString(),
-			ProjectId: data.ProjectId.ValueString(),
-			ServiceId: data.Id.ValueStringPointer(),
+			MountPath:     volumeData.MountPath.ValueString(),
+			ProjectId:     data.ProjectId.ValueString(),
+			ServiceId:     data.Id.ValueStringPointer(),
+			EnvironmentId: &environment.Id,
 		})
 
 		if err != nil {
