@@ -4,6 +4,9 @@
 * Add support for `target_port` in `railway_custom_domain` resource
 * Added `verification_host_label` and `verification_record_value` to `railway_custom_domain` resource
 
+### Bug fixes
+* Fixes `regions` and `num_replicas` changes being ignored when updating a `railway_service`
+
 ## 0.6.1
 
 ### Bug fixes

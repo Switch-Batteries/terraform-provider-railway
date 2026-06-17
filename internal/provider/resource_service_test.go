@@ -394,6 +394,48 @@ func TestAccServiceResourceNonDefaultRegionsImage(t *testing.T) {
 	})
 }
 
+func TestAccServiceResourceRegionsUpdate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			// Create with an explicit single-region replica count
+			{
+				Config: testAccServiceResourceConfigRegionReplicas("todo-app", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("railway_service.test", "id", uuidRegex()),
+					resource.TestCheckResourceAttr("railway_service.test", "name", "todo-app"),
+					resource.TestCheckResourceAttr("railway_service.test", "project_id", "0bb01547-570d-4109-a5e8-138691f6a2d1"),
+					resource.TestCheckResourceAttr("railway_service.test", "regions.0.region", "asia-southeast1-eqsg3a"),
+					resource.TestCheckResourceAttr("railway_service.test", "regions.0.num_replicas", "1"),
+				),
+			},
+			// ImportState testing
+			{
+				ResourceName:      "railway_service.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Update the replica count in place. This is the path that previously
+			// dropped the change and produced an inconsistent-result error.
+			{
+				Config: testAccServiceResourceConfigRegionReplicas("todo-app", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("railway_service.test", "regions.0.region", "asia-southeast1-eqsg3a"),
+					resource.TestCheckResourceAttr("railway_service.test", "regions.0.num_replicas", "2"),
+				),
+			},
+			// ImportState testing
+			{
+				ResourceName:      "railway_service.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// Delete testing automatically occurs in TestCase
+		},
+	})
+}
+
 func TestAccServiceResourceNonDefaultVolume(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
@@ -558,6 +600,22 @@ resource "railway_service" "test" {
   ]
 }
 `, name)
+}
+
+func testAccServiceResourceConfigRegionReplicas(name string, replicas int) string {
+	return fmt.Sprintf(`
+resource "railway_service" "test" {
+  name = "%s"
+  project_id = "0bb01547-570d-4109-a5e8-138691f6a2d1"
+
+  regions = [
+    {
+      region = "asia-southeast1-eqsg3a"
+      num_replicas = %d
+    }
+  ]
+}
+`, name, replicas)
 }
 
 func testAccServiceResourceConfigNonDefaultRegionsImage(name string) string {
