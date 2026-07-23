@@ -45,3 +45,26 @@ type VariableConfig struct {
 	Value    string `json:"value"`
 	IsSealed bool   `json:"isSealed"`
 }
+
+func SealedVariablePatch(serviceID string, name string, value string) EnvironmentConfig {
+	return variablePatch(serviceID, name, &VariableConfig{
+		Value:    value,
+		IsSealed: true,
+	})
+}
+
+func DeleteVariablePatch(serviceID string, name string) EnvironmentConfig {
+	return variablePatch(serviceID, name, nil)
+}
+
+func variablePatch(serviceID string, name string, variable *VariableConfig) EnvironmentConfig {
+	return EnvironmentConfig{
+		Services: map[string]ServiceConfig{
+			serviceID: {
+				Variables: map[string]*VariableConfig{
+					name: variable,
+				},
+			},
+		},
+	}
+}
