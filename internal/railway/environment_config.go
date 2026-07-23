@@ -7,8 +7,8 @@ type EnvironmentConfig struct {
 
 type BucketConfig struct {
 	Region    string `json:"region,omitempty"`
-	IsCreated bool   `json:"isCreated,omitempty"`
-	IsDeleted bool   `json:"isDeleted,omitempty"`
+	IsCreated bool   `json:"isCreated"`
+	IsDeleted bool   `json:"isDeleted"`
 }
 
 type ServiceConfig struct {
@@ -55,6 +55,32 @@ func SealedVariablePatch(serviceID string, name string, value string) Environmen
 
 func DeleteVariablePatch(serviceID string, name string) EnvironmentConfig {
 	return variablePatch(serviceID, name, nil)
+}
+
+func CreateBucketPatch(bucketID string, region string) EnvironmentConfig {
+	return EnvironmentConfig{
+		Buckets: map[string]BucketConfig{
+			bucketID: {
+				Region:    region,
+				IsCreated: true,
+			},
+		},
+	}
+}
+
+func DeleteBucketPatch(bucketID string) EnvironmentConfig {
+	return EnvironmentConfig{
+		Buckets: map[string]BucketConfig{
+			bucketID: {
+				IsDeleted: true,
+			},
+		},
+	}
+}
+
+func (c EnvironmentConfig) Bucket(bucketID string) (BucketConfig, bool) {
+	bucket, ok := c.Buckets[bucketID]
+	return bucket, ok
 }
 
 func variablePatch(serviceID string, name string, variable *VariableConfig) EnvironmentConfig {
