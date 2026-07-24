@@ -39,11 +39,14 @@ func TestAccBucketResourceDefault(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-test", "ams", true),
+				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-test", "ams", "https://example.com", 3600, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("railway_bucket.test", "name", "terraform-provider-bucket-test"),
 					resource.TestCheckResourceAttr("railway_bucket_instance.test", "region", "ams"),
 					resource.TestCheckResourceAttr("railway_bucket_instance.other", "region", "ams"),
+					resource.TestCheckResourceAttr("railway_bucket_cors_configuration.test", "cors_rules.#", "1"),
+					resource.TestCheckTypeSetElemAttr("railway_bucket_cors_configuration.test", "cors_rules.0.allowed_origins.*", "https://example.com"),
+					resource.TestCheckResourceAttr("railway_bucket_cors_configuration.test", "cors_rules.0.max_age_seconds", "3600"),
 					testAccCheckBucketDeployments(true),
 				),
 			},
@@ -60,21 +63,29 @@ func TestAccBucketResourceDefault(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "ams", true),
+				ResourceName:      "railway_bucket_cors_configuration.test",
+				ImportState:       true,
+				ImportStateIdFunc: bucketCorsConfigurationImportIDFunc,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "ams", "https://updated.example.com", 1800, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("railway_bucket.test", "name", "terraform-provider-bucket-renamed"),
+					resource.TestCheckTypeSetElemAttr("railway_bucket_cors_configuration.test", "cors_rules.0.allowed_origins.*", "https://updated.example.com"),
+					resource.TestCheckResourceAttr("railway_bucket_cors_configuration.test", "cors_rules.0.max_age_seconds", "1800"),
 					testAccCheckBucketDeployments(true),
 				),
 			},
 			{
-				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "ams", false),
+				Config: testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "ams", "", 0, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("railway_bucket.test", "name", "terraform-provider-bucket-renamed"),
 					testAccCheckBucketDeployments(false),
 				),
 			},
 			{
-				Config:      testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "iad", false),
+				Config:      testAccBucketResourceConfig(projectName, "terraform-provider-bucket-renamed", "iad", "", 0, false),
 				ExpectError: regexp.MustCompile("Bucket Instance Region Cannot Be Changed"),
 			},
 		},
@@ -85,8 +96,29 @@ func testAccBucketResourceConfig(
 	projectName string,
 	name string,
 	region string,
+	corsOrigin string,
+	maxAgeSeconds int,
 	includeOtherInstance bool,
 ) string {
+	corsConfiguration := ""
+	if corsOrigin != "" {
+		corsConfiguration = fmt.Sprintf(`
+resource "railway_bucket_cors_configuration" "test" {
+  project_id     = railway_project.test.id
+  environment_id = railway_bucket_instance.test.environment_id
+  bucket_id      = railway_bucket_instance.test.bucket_id
+
+  cors_rules = [{
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "HEAD", "PUT"]
+    allowed_origins = ["%s"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = %d
+  }]
+}
+`, corsOrigin, maxAgeSeconds)
+	}
+
 	otherInstance := ""
 	if includeOtherInstance {
 		otherInstance = fmt.Sprintf(`
@@ -123,7 +155,8 @@ resource "railway_bucket_instance" "test" {
   region         = "%s"
 }
 %s
-`, projectName, name, region, otherInstance)
+%s
+`, projectName, name, region, otherInstance, corsConfiguration)
 }
 
 func testAccCheckBucketDeployments(expectOther bool) resource.TestCheckFunc {
