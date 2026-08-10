@@ -504,15 +504,15 @@ type ServiceInstanceUpdateInput struct {
 	BuildCommand            *string                   `json:"buildCommand,omitempty"`
 	Builder                 *Builder                  `json:"builder,omitempty"`
 	CronSchedule            *string                   `json:"cronSchedule"`
-	DockerfilePath          string                    `json:"dockerfilePath"`
-	DrainingSeconds         int                       `json:"drainingSeconds"`
+	DockerfilePath          *string                   `json:"dockerfilePath,omitempty"`
+	DrainingSeconds         *int                      `json:"drainingSeconds,omitempty"`
 	HealthcheckPath         *string                   `json:"healthcheckPath,omitempty"`
 	HealthcheckTimeout      *int                      `json:"healthcheckTimeout,omitempty"`
-	Ipv6EgressEnabled       bool                      `json:"ipv6EgressEnabled"`
+	Ipv6EgressEnabled       *bool                     `json:"ipv6EgressEnabled,omitempty"`
 	MultiRegionConfig       *map[string]interface{}   `json:"multiRegionConfig,omitempty"`
 	NixpacksPlan            *map[string]interface{}   `json:"nixpacksPlan,omitempty"`
 	NumReplicas             *int                      `json:"numReplicas,omitempty"`
-	OverlapSeconds          int                       `json:"overlapSeconds"`
+	OverlapSeconds          *int                      `json:"overlapSeconds,omitempty"`
 	PreDeployCommand        *[]string                 `json:"preDeployCommand,omitempty"`
 	RailwayConfigFile       *string                   `json:"railwayConfigFile,omitempty"`
 	Region                  *string                   `json:"region,omitempty"`
@@ -536,10 +536,10 @@ func (v *ServiceInstanceUpdateInput) GetBuilder() *Builder { return v.Builder }
 func (v *ServiceInstanceUpdateInput) GetCronSchedule() *string { return v.CronSchedule }
 
 // GetDockerfilePath returns ServiceInstanceUpdateInput.DockerfilePath, and is useful for accessing the field via an interface.
-func (v *ServiceInstanceUpdateInput) GetDockerfilePath() string { return v.DockerfilePath }
+func (v *ServiceInstanceUpdateInput) GetDockerfilePath() *string { return v.DockerfilePath }
 
 // GetDrainingSeconds returns ServiceInstanceUpdateInput.DrainingSeconds, and is useful for accessing the field via an interface.
-func (v *ServiceInstanceUpdateInput) GetDrainingSeconds() int { return v.DrainingSeconds }
+func (v *ServiceInstanceUpdateInput) GetDrainingSeconds() *int { return v.DrainingSeconds }
 
 // GetHealthcheckPath returns ServiceInstanceUpdateInput.HealthcheckPath, and is useful for accessing the field via an interface.
 func (v *ServiceInstanceUpdateInput) GetHealthcheckPath() *string { return v.HealthcheckPath }
@@ -548,7 +548,7 @@ func (v *ServiceInstanceUpdateInput) GetHealthcheckPath() *string { return v.Hea
 func (v *ServiceInstanceUpdateInput) GetHealthcheckTimeout() *int { return v.HealthcheckTimeout }
 
 // GetIpv6EgressEnabled returns ServiceInstanceUpdateInput.Ipv6EgressEnabled, and is useful for accessing the field via an interface.
-func (v *ServiceInstanceUpdateInput) GetIpv6EgressEnabled() bool { return v.Ipv6EgressEnabled }
+func (v *ServiceInstanceUpdateInput) GetIpv6EgressEnabled() *bool { return v.Ipv6EgressEnabled }
 
 // GetMultiRegionConfig returns ServiceInstanceUpdateInput.MultiRegionConfig, and is useful for accessing the field via an interface.
 func (v *ServiceInstanceUpdateInput) GetMultiRegionConfig() *map[string]interface{} {
@@ -562,7 +562,7 @@ func (v *ServiceInstanceUpdateInput) GetNixpacksPlan() *map[string]interface{} {
 func (v *ServiceInstanceUpdateInput) GetNumReplicas() *int { return v.NumReplicas }
 
 // GetOverlapSeconds returns ServiceInstanceUpdateInput.OverlapSeconds, and is useful for accessing the field via an interface.
-func (v *ServiceInstanceUpdateInput) GetOverlapSeconds() int { return v.OverlapSeconds }
+func (v *ServiceInstanceUpdateInput) GetOverlapSeconds() *int { return v.OverlapSeconds }
 
 // GetPreDeployCommand returns ServiceInstanceUpdateInput.PreDeployCommand, and is useful for accessing the field via an interface.
 func (v *ServiceInstanceUpdateInput) GetPreDeployCommand() *[]string { return v.PreDeployCommand }
