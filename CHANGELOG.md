@@ -1,3 +1,12 @@
+## Unreleased
+
+### Enhancements
+* Add `railway_bucket` and `railway_bucket_instance` resources for project-level buckets and their per-environment deployment (upstream PR #86)
+* Add `railway_bucket_credentials` ephemeral resource for reading S3 credentials without persisting them in state (requires Terraform 1.10+)
+* Add `railway_bucket_cors_configuration` resource for S3 CORS rules
+* Support sealed values in `railway_variable` via write-only `value_wo` / `value_wo_version` (requires Terraform 1.11+)
+* Omit unmanaged fields from `ServiceInstanceUpdateInput` (upstream #92)
+
 ## 0.6.2
 
 ### Enhancements
