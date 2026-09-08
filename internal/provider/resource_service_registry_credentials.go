@@ -200,14 +200,7 @@ func (r *ServiceRegistryCredentialsResource) ImportState(ctx context.Context, re
 }
 
 func (r *ServiceRegistryCredentialsResource) write(ctx context.Context, data *ServiceRegistryCredentialsResourceModel, username string, password string) error {
-	input := ServiceInstanceUpdateInput{
-		RegistryCredentials: &RegistryCredentialsInput{
-			Username: username,
-			Password: password,
-		},
-	}
-
-	_, err := updateServiceInstanceRegistryCredentials(ctx, *r.client, data.EnvironmentId.ValueString(), data.ServiceId.ValueString(), input)
+	_, err := updateServiceInstanceRegistryCredentials(ctx, *r.client, data.EnvironmentId.ValueString(), data.ServiceId.ValueString(), username, password)
 
 	return err
 }

@@ -1398,9 +1398,10 @@ func (v *__updateServiceInstanceInput) GetInput() ServiceInstanceUpdateInput { r
 
 // __updateServiceInstanceRegistryCredentialsInput is used internally by genqlient
 type __updateServiceInstanceRegistryCredentialsInput struct {
-	EnvironmentId string                     `json:"environmentId"`
-	ServiceId     string                     `json:"serviceId"`
-	Input         ServiceInstanceUpdateInput `json:"input"`
+	EnvironmentId string `json:"environmentId"`
+	ServiceId     string `json:"serviceId"`
+	Username      string `json:"username"`
+	Password      string `json:"password"`
 }
 
 // GetEnvironmentId returns __updateServiceInstanceRegistryCredentialsInput.EnvironmentId, and is useful for accessing the field via an interface.
@@ -1411,10 +1412,11 @@ func (v *__updateServiceInstanceRegistryCredentialsInput) GetEnvironmentId() str
 // GetServiceId returns __updateServiceInstanceRegistryCredentialsInput.ServiceId, and is useful for accessing the field via an interface.
 func (v *__updateServiceInstanceRegistryCredentialsInput) GetServiceId() string { return v.ServiceId }
 
-// GetInput returns __updateServiceInstanceRegistryCredentialsInput.Input, and is useful for accessing the field via an interface.
-func (v *__updateServiceInstanceRegistryCredentialsInput) GetInput() ServiceInstanceUpdateInput {
-	return v.Input
-}
+// GetUsername returns __updateServiceInstanceRegistryCredentialsInput.Username, and is useful for accessing the field via an interface.
+func (v *__updateServiceInstanceRegistryCredentialsInput) GetUsername() string { return v.Username }
+
+// GetPassword returns __updateServiceInstanceRegistryCredentialsInput.Password, and is useful for accessing the field via an interface.
+func (v *__updateServiceInstanceRegistryCredentialsInput) GetPassword() string { return v.Password }
 
 // __updateVolumeInput is used internally by genqlient
 type __updateVolumeInput struct {
@@ -5765,26 +5767,29 @@ mutation updateServiceInstance ($serviceId: String!, $input: ServiceInstanceUpda
 // in the project. A credential is per service instance, so this names its
 // environment.
 //
-// ServiceInstanceUpdateInput is generated once for every operation that uses it,
-// so the field directives must match resource_service.graphql exactly.
+// The credential is the only field sent. Binding $input to the generated
+// ServiceInstanceUpdateInput would serialise its cronSchedule as an explicit
+// null, which Railway treats as "clear the schedule".
 func updateServiceInstanceRegistryCredentials(
 	ctx context.Context,
 	client graphql.Client,
 	environmentId string,
 	serviceId string,
-	input ServiceInstanceUpdateInput,
+	username string,
+	password string,
 ) (*updateServiceInstanceRegistryCredentialsResponse, error) {
 	req := &graphql.Request{
 		OpName: "updateServiceInstanceRegistryCredentials",
 		Query: `
-mutation updateServiceInstanceRegistryCredentials ($environmentId: String!, $serviceId: String!, $input: ServiceInstanceUpdateInput!) {
-	serviceInstanceUpdate(environmentId: $environmentId, input: $input, serviceId: $serviceId)
+mutation updateServiceInstanceRegistryCredentials ($environmentId: String!, $serviceId: String!, $username: String!, $password: String!) {
+	serviceInstanceUpdate(environmentId: $environmentId, serviceId: $serviceId, input: {registryCredentials:{username:$username,password:$password}})
 }
 `,
 		Variables: &__updateServiceInstanceRegistryCredentialsInput{
 			EnvironmentId: environmentId,
 			ServiceId:     serviceId,
-			Input:         input,
+			Username:      username,
+			Password:      password,
 		},
 	}
 	var err error
