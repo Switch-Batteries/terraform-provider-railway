@@ -9,6 +9,7 @@
 
 ### Bug fixes
 * Removing `root_directory` or `config_path` from a `railway_service` now clears them on Railway instead of leaving the old values behind
+* Switching a `railway_service` from `source_repo` to `source_image` now disconnects the repository, so redeploys build from the image rather than the repository's leftover deployment trigger
 
 ## 0.6.2
 

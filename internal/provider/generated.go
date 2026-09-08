@@ -3467,13 +3467,19 @@ func (v *listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnecti
 
 // listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger includes the requested fields of the GraphQL type DeploymentTrigger.
 type listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger struct {
-	Id     string `json:"id"`
-	Branch string `json:"branch"`
+	Id         string `json:"id"`
+	Repository string `json:"repository"`
+	Branch     string `json:"branch"`
 }
 
 // GetId returns listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger.Id, and is useful for accessing the field via an interface.
 func (v *listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger) GetId() string {
 	return v.Id
+}
+
+// GetRepository returns listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger.Repository, and is useful for accessing the field via an interface.
+func (v *listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger) GetRepository() string {
+	return v.Repository
 }
 
 // GetBranch returns listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger.Branch, and is useful for accessing the field via an interface.
@@ -5392,6 +5398,7 @@ query listDeploymentTriggers ($projectId: String!, $environmentId: String!, $ser
 		edges {
 			node {
 				id
+				repository
 				branch
 			}
 		}

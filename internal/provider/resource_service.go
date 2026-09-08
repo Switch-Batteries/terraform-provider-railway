@@ -770,24 +770,36 @@ func getAndBuildServiceInstance(ctx context.Context, client graphql.Client, proj
 			data.SourceImage = types.StringValue(*response.ServiceInstance.Source.Image)
 		}
 
+		triggersResponse, err := listDeploymentTriggers(ctx, client, projectId, environment.Id, serviceId)
+
+		if err != nil {
+			return err
+		}
+
+		// up to 1 deployment trigger is allowed for one (service, environment) pair. So, dealing with [0] only
+		var trigger *listDeploymentTriggersDeploymentTriggersQueryDeploymentTriggersConnectionEdgesQueryDeploymentTriggersConnectionEdgeNodeDeploymentTrigger
+		if edges := triggersResponse.DeploymentTriggers.Edges; len(edges) > 0 {
+			trigger = &edges[0].Node
+		}
+
 		if response.ServiceInstance.Source.Repo != nil {
 			data.SourceRepo = types.StringValue(*response.ServiceInstance.Source.Repo)
 
-			triggersResponse, err := listDeploymentTriggers(ctx, client, projectId, environment.Id, serviceId)
-
-			if err != nil {
-				return err
-			}
-
-			// up to 1 deployment trigger is allowed for one (service, environment) pair. So, dealing with [0] only
-			if edges := triggersResponse.DeploymentTriggers.Edges; len(edges) > 0 {
-				data.SourceRepoBranch = types.StringValue(edges[0].Node.Branch)
+			if trigger != nil {
+				data.SourceRepoBranch = types.StringValue(trigger.Branch)
 			} else if data.SourceRepoBranch.IsNull() || data.SourceRepoBranch.IsUnknown() {
 				// Only set to null if there's no existing value
 				// This preserves the branch value during updates when triggers might not be immediately available
 				data.SourceRepoBranch = types.StringNull()
 			}
 			// Otherwise keep the existing value from state/plan
+		} else if trigger != nil && trigger.Repository != "" {
+			// Connecting an image does not remove a repo's deployment trigger, and
+			// Railway keeps building from the trigger on every redeploy. Report it
+			// as the repo source it still is, so the plan shows it and the update
+			// disconnects it.
+			data.SourceRepo = types.StringValue(trigger.Repository)
+			data.SourceRepoBranch = types.StringValue(trigger.Branch)
 		}
 	}
 
@@ -896,6 +908,14 @@ func updateServiceConnection(ctx context.Context, client graphql.Client, service
 
 	// if some sources are really changed we just propagating these values to Railway. Data is pre-validated and Railway knows what to do.
 	if isSourceChanged {
+		// A repo leaving the config has to be disconnected explicitly: connecting
+		// an image over it leaves the repo's deployment trigger behind.
+		if !state.SourceRepo.IsNull() && data.SourceRepo.IsNull() {
+			if _, err := disconnectService(ctx, client, serviceId); err != nil {
+				return err
+			}
+		}
+
 		connectInput := buildServiceConnectInput(data)
 		_, err := connectService(ctx, client, serviceId, connectInput)
 		return err

@@ -206,6 +206,7 @@ query listDeploymentTriggers(
     edges {
       node {
         id
+        repository
         branch
       }
     }
