@@ -1396,6 +1396,26 @@ func (v *__updateServiceInstanceInput) GetServiceId() string { return v.ServiceI
 // GetInput returns __updateServiceInstanceInput.Input, and is useful for accessing the field via an interface.
 func (v *__updateServiceInstanceInput) GetInput() ServiceInstanceUpdateInput { return v.Input }
 
+// __updateServiceInstanceRegistryCredentialsInput is used internally by genqlient
+type __updateServiceInstanceRegistryCredentialsInput struct {
+	EnvironmentId string                     `json:"environmentId"`
+	ServiceId     string                     `json:"serviceId"`
+	Input         ServiceInstanceUpdateInput `json:"input"`
+}
+
+// GetEnvironmentId returns __updateServiceInstanceRegistryCredentialsInput.EnvironmentId, and is useful for accessing the field via an interface.
+func (v *__updateServiceInstanceRegistryCredentialsInput) GetEnvironmentId() string {
+	return v.EnvironmentId
+}
+
+// GetServiceId returns __updateServiceInstanceRegistryCredentialsInput.ServiceId, and is useful for accessing the field via an interface.
+func (v *__updateServiceInstanceRegistryCredentialsInput) GetServiceId() string { return v.ServiceId }
+
+// GetInput returns __updateServiceInstanceRegistryCredentialsInput.Input, and is useful for accessing the field via an interface.
+func (v *__updateServiceInstanceRegistryCredentialsInput) GetInput() ServiceInstanceUpdateInput {
+	return v.Input
+}
+
 // __updateVolumeInput is used internally by genqlient
 type __updateVolumeInput struct {
 	Id    string            `json:"id"`
@@ -3814,6 +3834,17 @@ type updateServiceDomainResponse struct {
 // GetServiceDomainUpdate returns updateServiceDomainResponse.ServiceDomainUpdate, and is useful for accessing the field via an interface.
 func (v *updateServiceDomainResponse) GetServiceDomainUpdate() bool { return v.ServiceDomainUpdate }
 
+// updateServiceInstanceRegistryCredentialsResponse is returned by updateServiceInstanceRegistryCredentials on success.
+type updateServiceInstanceRegistryCredentialsResponse struct {
+	// Update a service instance
+	ServiceInstanceUpdate bool `json:"serviceInstanceUpdate"`
+}
+
+// GetServiceInstanceUpdate returns updateServiceInstanceRegistryCredentialsResponse.ServiceInstanceUpdate, and is useful for accessing the field via an interface.
+func (v *updateServiceInstanceRegistryCredentialsResponse) GetServiceInstanceUpdate() bool {
+	return v.ServiceInstanceUpdate
+}
+
 // updateServiceInstanceResponse is returned by updateServiceInstance on success.
 type updateServiceInstanceResponse struct {
 	// Update a service instance
@@ -5718,6 +5749,47 @@ mutation updateServiceInstance ($serviceId: String!, $input: ServiceInstanceUpda
 	var err error
 
 	var data updateServiceInstanceResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+// Environment-scoped on purpose: updateServiceInstance in resource_service.graphql
+// passes environmentId: null, which Railway applies to every non-fork environment
+// in the project. A credential is per service instance, so this names its
+// environment.
+//
+// ServiceInstanceUpdateInput is generated once for every operation that uses it,
+// so the field directives must match resource_service.graphql exactly.
+func updateServiceInstanceRegistryCredentials(
+	ctx context.Context,
+	client graphql.Client,
+	environmentId string,
+	serviceId string,
+	input ServiceInstanceUpdateInput,
+) (*updateServiceInstanceRegistryCredentialsResponse, error) {
+	req := &graphql.Request{
+		OpName: "updateServiceInstanceRegistryCredentials",
+		Query: `
+mutation updateServiceInstanceRegistryCredentials ($environmentId: String!, $serviceId: String!, $input: ServiceInstanceUpdateInput!) {
+	serviceInstanceUpdate(environmentId: $environmentId, input: $input, serviceId: $serviceId)
+}
+`,
+		Variables: &__updateServiceInstanceRegistryCredentialsInput{
+			EnvironmentId: environmentId,
+			ServiceId:     serviceId,
+			Input:         input,
+		},
+	}
+	var err error
+
+	var data updateServiceInstanceRegistryCredentialsResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

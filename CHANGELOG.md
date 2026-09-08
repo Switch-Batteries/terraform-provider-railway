@@ -6,6 +6,7 @@
 * Add `railway_bucket_cors_configuration` resource for S3 CORS rules
 * Support sealed values in `railway_variable` via write-only `value_wo` / `value_wo_version` (requires Terraform 1.11+)
 * Omit unmanaged fields from `ServiceInstanceUpdateInput` (upstream #92)
+* Add `railway_service_registry_credentials` resource, the image pull credential on one service instance, for services Terraform does not otherwise manage
 
 ### Bug fixes
 * Removing `root_directory` or `config_path` from a `railway_service` now clears them on Railway instead of leaving the old values behind
