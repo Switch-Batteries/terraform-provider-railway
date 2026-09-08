@@ -702,13 +702,13 @@ func buildServiceInstanceInput(data *ServiceResourceModel, regionsData *[]Servic
 		instanceInput.CronSchedule = data.CronSchedule.ValueStringPointer()
 	}
 
-	if !data.RootDirectory.IsNull() {
-		instanceInput.RootDirectory = data.RootDirectory.ValueStringPointer()
-	}
-
-	if !data.ConfigPath.IsNull() {
-		instanceInput.RailwayConfigFile = data.ConfigPath.ValueStringPointer()
-	}
+	// Always sent. Railway treats an omitted or null rootDirectory and
+	// railwayConfigFile as "no change", so a removed root_directory or
+	// config_path would otherwise survive on the service and read back as
+	// drift. An empty string is what clears them; it is what Railway's own
+	// `railway config migrate --apply` sends.
+	instanceInput.RootDirectory = clearableString(data.RootDirectory)
+	instanceInput.RailwayConfigFile = clearableString(data.ConfigPath)
 
 	if regionsData != nil {
 		multiRegionConfig := make(map[string]interface{})
@@ -939,4 +939,13 @@ func redeployAllInstances(ctx context.Context, client graphql.Client, serviceId 
 	tflog.Trace(ctx, "redeployed all service instances")
 
 	return nil
+}
+
+func clearableString(value types.String) *string {
+	if value.IsNull() {
+		empty := ""
+		return &empty
+	}
+
+	return value.ValueStringPointer()
 }

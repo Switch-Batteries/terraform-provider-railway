@@ -7,6 +7,9 @@
 * Support sealed values in `railway_variable` via write-only `value_wo` / `value_wo_version` (requires Terraform 1.11+)
 * Omit unmanaged fields from `ServiceInstanceUpdateInput` (upstream #92)
 
+### Bug fixes
+* Removing `root_directory` or `config_path` from a `railway_service` now clears them on Railway instead of leaving the old values behind
+
 ## 0.6.2
 
 ### Enhancements
