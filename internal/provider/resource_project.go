@@ -303,10 +303,10 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 
 	project := response.ProjectUpdate.Project
 
-	noOfEnvironments := len(project.Environments.Edges)
+	enviroment, err := defaultEnvironment(&project)
 
-	if noOfEnvironments < 1 {
-		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Expected at least one environment, got %d", noOfEnvironments))
+	if err != nil {
+		resp.Diagnostics.AddError("Client Error", fmt.Sprintf("Unable to read project, got error: %s", err))
 		return
 	}
 
@@ -323,8 +323,8 @@ func (r *ProjectResource) Update(ctx context.Context, req resource.UpdateRequest
 	data.DefaultEnvironment = types.ObjectValueMust(
 		defaultEnvironmentAttrTypes,
 		map[string]attr.Value{
-			"id":   types.StringValue(project.Environments.Edges[0].Node.Id),
-			"name": types.StringValue(project.Environments.Edges[0].Node.Name),
+			"id":   types.StringValue(enviroment.Id),
+			"name": types.StringValue(enviroment.Name),
 		},
 	)
 
@@ -364,16 +364,29 @@ func defaultEnvironmentForProject(ctx context.Context, client graphql.Client, pr
 	}
 
 	project := response.Project.Project
+
+	enviroment, err := defaultEnvironment(&project)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &project, enviroment, nil
+}
+
+// The oldest environment is the default. Railway's API does not flag it, and
+// the edge order it returns is not creation order, so every path that reports
+// the default environment must sort rather than take the first edge.
+func defaultEnvironment(project *Project) (*ProjectEnvironmentsProjectEnvironmentsConnectionEdgesProjectEnvironmentsConnectionEdgeNodeEnvironment, error) {
 	noOfEnvironments := len(project.Environments.Edges)
 
 	if noOfEnvironments < 1 {
-		return nil, nil, fmt.Errorf("expected at least one environment, got %d", noOfEnvironments)
+		return nil, fmt.Errorf("expected at least one environment, got %d", noOfEnvironments)
 	}
 
-	// Mark the oldest environment as the default
 	sort.SliceStable(project.Environments.Edges, func(i, j int) bool {
 		return project.Environments.Edges[i].Node.CreatedAt.Before(project.Environments.Edges[j].Node.CreatedAt)
 	})
 
-	return &project, &project.Environments.Edges[0].Node, nil
+	return &project.Environments.Edges[0].Node, nil
 }
